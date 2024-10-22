@@ -1,5 +1,8 @@
 const std = @import("std");
 
+const fansi = @import("./fansi.zig").Fansi{};
+const log = @import("log.zig").log;
+
 fn from_epoch(now: i64) void {
     var days_since = @divFloor(now, std.time.s_per_day); // 1 jan 1970
 
@@ -82,7 +85,7 @@ fn from_epoch(now: i64) void {
         month += 1;
     }
 
-    std.debug.print("     ({: >2}/{: >2}/{: >4})\n", .{ days_since + 1, month, year });
+    log("     ({: >2}/{: >2}/{: >4})\n", .{ days_since + 1, month, year });
     // 21
     // 6 + 8 + 6
     print_month(month, @intCast(days_since), @intCast(day), leap);
@@ -105,24 +108,28 @@ fn print_month(month: u32, days_since: i64, day: i64, leap: bool) void {
     const diff: u32 = @intCast(@mod((day - days_since), 7));
     // 13 + k % 7 = 1
 
-    std.debug.print("\x1B[96;4;1m Su Mo Tu We Th Fr Sa\x1B[0m\n", .{});
-    // std.debug.print("---------------------\n", .{});
+    fansi.foreground(0, 128, 255).bold().underline().print(" Su Mo Tu We Th Fr Sa\n", .{}).clear();
+
+    // log("---------------------\n", .{});
 
     for (0..diff) |_| {
-        std.debug.print("   ", .{});
+        log("   ", .{});
     }
 
     for (0..days) |d| {
         if (d == days_since) {
-            std.debug.print("\x1B[32;1m{: >3}\x1B[0m", .{d + 1});
+            fansi.foreground(100, 255, 100)
+                .bold()
+                .print("{: >3}", .{d + 1}).clear();
         } else {
-            std.debug.print("\x1B[31m{: >3}\x1B[0m", .{d + 1});
+            fansi.foreground(255, 100, 100)
+                .print("{: >3}", .{d + 1}).clear();
         }
         if ((d + diff + 1) % 7 == 0) {
-            std.debug.print("\n", .{});
+            log("\n", .{});
         }
     }
-    std.debug.print("\n", .{});
+    log("\n", .{});
 }
 
 test "simple test" {
